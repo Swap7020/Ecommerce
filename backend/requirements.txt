@@ -12,6 +12,7 @@ djangorestframework-simplejwt==5.3.1
 
 # Database
 psycopg2-binary==2.9.9        # PostgreSQL (production)
+dj-database-url==2.1.0        # Parse DATABASE_URL (Render/Railway/Heroku)
 
 # Auth
 django-allauth==0.63.3
