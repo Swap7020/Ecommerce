@@ -13,7 +13,15 @@ DEBUG = False
 # Fall back to individual vars for other platforms.
 _DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
-if _DATABASE_URL:
+if _DATABASE_URL and _DATABASE_URL.startswith('sqlite'):
+    # Build-time placeholder — use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': '/tmp/build.db',
+        }
+    }
+elif _DATABASE_URL:
     # Parse DATABASE_URL (postgres://user:pass@host:port/dbname)
     # dj-database-url handles this cleanly
     try:
