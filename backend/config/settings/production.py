@@ -82,7 +82,7 @@ if _EXTRA:
 # ─── Allowed hosts ────────────────────────────────────────────────────────────
 # Render injects the service URL; accept *.onrender.com + custom domain
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
-ALLOWED_HOSTS += ['.onrender.com', '.railway.app']
+ALLOWED_HOSTS += ['.onrender.com', '.railway.app', '.up.railway.app']
 
 # ─── Security ─────────────────────────────────────────────────────────────────
 # Render terminates SSL at the load balancer, so SSL redirect must be OFF
@@ -100,7 +100,7 @@ X_FRAME_OPTIONS                  = 'DENY'
 SECURE_PROXY_SSL_HEADER          = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ─── CSRF ─────────────────────────────────────────────────────────────────────
-CSRF_TRUSTED_ORIGINS = [_FRONTEND, 'https://*.onrender.com']
+CSRF_TRUSTED_ORIGINS = [_FRONTEND, 'https://*.onrender.com', 'https://*.railway.app', 'https://*.up.railway.app']
 
 # ─── Email ────────────────────────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
