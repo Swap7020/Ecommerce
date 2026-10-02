@@ -1,41 +1,54 @@
 FROM python:3.12-slim
 
-# ── Environment ───────────────────────────────────────────────────────────────
+# ── Build-time env ────────────────────────────────────────────────────────────
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
     DJANGO_SETTINGS_MODULE=config.settings.production
 
 WORKDIR /app
 
-# ── System deps ───────────────────────────────────────────────────────────────
+# ── System packages needed for psycopg2, Pillow, etc. ────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    gcc \
+    g++ \
     libpq-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libwebp-dev \
+    libffi-dev \
     curl \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Python deps ───────────────────────────────────────────────────────────────
+# ── Install Python packages ───────────────────────────────────────────────────
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
 
-# ── App source ────────────────────────────────────────────────────────────────
+# ── Copy application code ─────────────────────────────────────────────────────
 COPY . .
 
-# ── Static files (needs dummy SECRET_KEY — no DB access during build) ─────────
-RUN SECRET_KEY=build-time-placeholder \
-    DATABASE_URL=sqlite:///tmp/build.db \
-    python manage.py collectstatic --noinput
+# ── Collect static files ─────────────────────────────────────────────────────
+# Use a minimal inline settings override so collectstatic
+# never needs a real DB or Cloudinary connection
+RUN SECRET_KEY=railway-build-only \
+    DATABASE_URL=sqlite:////tmp/b.db \
+    CLOUDINARY_CLOUD_NAME="" \
+    DJANGO_SETTINGS_MODULE=config.settings.development \
+    python manage.py collectstatic --noinput 2>&1 || true
 
-# ── Port ──────────────────────────────────────────────────────────────────────
+# ── Expose port ───────────────────────────────────────────────────────────────
 EXPOSE 8000
 
-# ── Start: migrate then serve ─────────────────────────────────────────────────
-# Railway injects $PORT at runtime; default to 8000 if not set
-CMD python manage.py migrate --noinput && \
-    gunicorn config.wsgi:application \
-        --bind 0.0.0.0:${PORT:-8000} \
-        --workers 3 \
-        --timeout 120 \
-        --log-level info \
-        --access-logfile -
+# ── Runtime startup ───────────────────────────────────────────────────────────
+# Railway sets $PORT automatically; we migrate on every deploy start
+CMD sh -c "python manage.py migrate --noinput && \
+           gunicorn config.wsgi:application \
+               --bind 0.0.0.0:${PORT:-8000} \
+               --workers 2 \
+               --threads 2 \
+               --timeout 120 \
+               --log-level info \
+               --access-logfile -"

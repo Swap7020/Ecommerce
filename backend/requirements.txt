@@ -1,9 +1,8 @@
 # ============================================================
 # AURA Cosmetics — Python Dependencies
-# Install: pip install -r requirements.txt
 # ============================================================
 
-# Core
+# Core Django
 Django==5.0.4
 djangorestframework==3.15.1
 django-cors-headers==4.3.1
@@ -11,19 +10,19 @@ django-filter==24.2
 djangorestframework-simplejwt==5.3.1
 
 # Database
-psycopg2-binary==2.9.9        # PostgreSQL (production)
-dj-database-url==2.1.0        # Parse DATABASE_URL (Render/Railway/Heroku)
+psycopg2-binary==2.9.9
+dj-database-url==2.2.0
 
 # Auth
 django-allauth==0.63.3
 dj-rest-auth==6.0.0
-requests==2.31.0               # required by allauth social
+requests==2.31.0
 
 # Media storage
 cloudinary==1.39.1
 django-cloudinary-storage==0.3.0
 
-# Cache / async tasks
+# Cache & async tasks
 redis==5.0.4
 django-redis==5.4.0
 celery==5.3.6
