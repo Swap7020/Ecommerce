@@ -1,0 +1,190 @@
+/* ── AURA Admin Panel — Custom Theme ─────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600&display=swap');
+
+:root {
+  --nude:       #C4956A;
+  --nude-light: #F5EAD2;
+  --nude-dark:  #8A6242;
+  --champagne:  #EDD8B4;
+  --charcoal:   #1A1A1A;
+  --ivory:      #FAF4E4;
+}
+
+/* Base */
+body, html { font-family: 'Inter', system-ui, sans-serif !important; }
+h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif !important; }
+
+/* Header / nav */
+#header {
+  background: var(--charcoal) !important;
+  border-bottom: 2px solid var(--nude) !important;
+  padding: 12px 24px !important;
+}
+#header a:link, #header a:visited { color: var(--champagne) !important; }
+#branding h1, #branding h1 a { color: var(--champagne) !important; font-family: 'Playfair Display', serif !important; letter-spacing: 0.2em; }
+#user-tools { color: #9ca3af !important; }
+#user-tools a { color: var(--nude) !important; }
+
+/* Navigation */
+#nav-sidebar .module caption, .app-accounts caption,
+.app-products caption, .app-orders caption {
+  background: var(--charcoal) !important;
+  color: var(--champagne) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 10px 14px !important;
+}
+
+/* Breadcrumbs */
+div.breadcrumbs {
+  background: var(--ivory) !important;
+  color: var(--charcoal) !important;
+  border-bottom: 1px solid var(--nude-light) !important;
+  padding: 10px 24px !important;
+}
+div.breadcrumbs a { color: var(--nude) !important; }
+
+/* Content */
+#content {
+  background: var(--ivory) !important;
+  padding: 20px 24px !important;
+}
+#content-main { max-width: 1400px; }
+
+/* Modules / fieldsets */
+.module, fieldset.module {
+  border: 1px solid var(--nude-light) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  margin-bottom: 16px !important;
+}
+.module h2, .module caption, fieldset.module h2 {
+  background: var(--charcoal) !important;
+  color: var(--champagne) !important;
+  font-size: 12px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  padding: 10px 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+}
+
+/* Tables */
+#result_list thead th {
+  background: #f9f5ef !important;
+  color: #6b7280 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border-bottom: 2px solid var(--nude-light) !important;
+  padding: 10px 14px !important;
+}
+#result_list tbody tr:hover { background: #fdf7f0 !important; }
+#result_list tbody tr:nth-child(even) { background: #fefcf8 !important; }
+#result_list tbody td { padding: 10px 14px !important; border-bottom: 1px solid var(--nude-light) !important; }
+
+/* Buttons */
+.button, input[type=submit], input[type=button],
+.submit-row input, a.button {
+  background: var(--nude) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 18px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+.button:hover, input[type=submit]:hover { background: var(--nude-dark) !important; }
+.button.default { background: var(--charcoal) !important; }
+.button.default:hover { background: #333 !important; }
+.deletelink { background: #dc2626 !important; }
+.deletelink:hover { background: #b91c1c !important; }
+
+/* Submit row */
+.submit-row {
+  background: #f9f5ef !important;
+  border-top: 1px solid var(--nude-light) !important;
+  border-radius: 0 0 12px 12px !important;
+  padding: 12px 16px !important;
+}
+
+/* Forms */
+input[type=text], input[type=email], input[type=password],
+input[type=number], input[type=url], textarea, select {
+  border: 1px solid #e5d5bf !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  transition: border-color 0.2s !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--nude) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important;
+}
+
+/* Messages */
+.messagelist li.success {
+  background: #dcfce7 !important; color: #15803d !important;
+  border-left: 4px solid #16a34a !important; border-radius: 8px !important;
+  padding: 10px 16px !important; font-size: 13px !important;
+}
+.messagelist li.warning {
+  background: #fef9c3 !important; color: #854d0e !important;
+  border-left: 4px solid #ca8a04 !important; border-radius: 8px !important;
+}
+.messagelist li.error {
+  background: #fee2e2 !important; color: #991b1b !important;
+  border-left: 4px solid #dc2626 !important; border-radius: 8px !important;
+}
+
+/* Pagination */
+.paginator {
+  background: #f9f5ef !important;
+  border-top: 1px solid var(--nude-light) !important;
+  padding: 10px !important;
+}
+.paginator a { color: var(--nude) !important; font-weight: 600 !important; }
+.paginator .this-page {
+  background: var(--nude) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+}
+
+/* Filters */
+#changelist-filter {
+  background: #fff !important;
+  border-left: 1px solid var(--nude-light) !important;
+  border-radius: 12px !important;
+}
+#changelist-filter h2 {
+  background: var(--charcoal) !important;
+  color: var(--champagne) !important;
+  font-size: 11px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 10px 14px !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+#changelist-filter h3 {
+  color: var(--nude-dark) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  padding: 8px 14px 4px !important;
+  margin: 0 !important;
+}
+#changelist-filter li a { color: var(--charcoal) !important; font-size: 13px !important; }
+#changelist-filter li.selected a { color: var(--nude) !important; font-weight: 600 !important; }
+
+/* Search bar */
+#toolbar { background: #f9f5ef !important; border-bottom: 1px solid var(--nude-light) !important; }
+#searchbar { border: 1px solid #e5d5bf !important; border-radius: 8px !important; padding: 6px 12px !important; }
+
+/* Actions */
+.actions select { border-radius: 8px !important; border: 1px solid #e5d5bf !important; }

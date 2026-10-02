@@ -1,0 +1,173 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div style="font-family:'Inter',system-ui,sans-serif;">
+
+<!-- KPI Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;">
+
+  <div style="background:#1a1a1a;border-radius:16px;padding:20px;color:#fff;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Total Revenue</div>
+    <div style="font-size:28px;font-weight:700;font-family:Georgia,serif;">₹{{ total_revenue|default:"0" }}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">All time paid orders</div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Total Orders</div>
+    <div style="font-size:28px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;">{{ total_orders|default:"0" }}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">{{ pending_orders }} pending</div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Customers</div>
+    <div style="font-size:28px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;">{{ total_customers|default:"0" }}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">{{ new_customers }} new this month</div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Products</div>
+    <div style="font-size:28px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;">{{ total_products|default:"0" }}</div>
+    <div style="font-size:12px;color:{% if low_stock > 0 %}#dc2626{% else %}#9ca3af{% endif %};margin-top:4px;">
+      {% if low_stock > 0 %}⚠ {{ low_stock }} low stock{% else %}All stocked{% endif %}
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Avg Order Value</div>
+    <div style="font-size:28px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;">₹{{ avg_order_value|default:"0" }}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Per paid order</div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="font-size:11px;letter-spacing:2px;color:#C4956A;text-transform:uppercase;margin-bottom:8px;">Newsletter</div>
+    <div style="font-size:28px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;">{{ newsletter_subs|default:"0" }}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Active subscribers</div>
+  </div>
+
+</div>
+
+<!-- Recent Orders + Low Stock -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+
+  <!-- Recent Orders -->
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;font-family:Georgia,serif;font-size:16px;color:#1a1a1a;">Recent Orders</h3>
+      <a href="/admin/orders/order/" style="font-size:12px;color:#C4956A;text-decoration:none;">View all →</a>
+    </div>
+    {% if recent_orders %}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid #F5EAD2;">
+          <th style="padding:6px 0;text-align:left;color:#9ca3af;font-weight:600;">Order</th>
+          <th style="padding:6px 0;text-align:left;color:#9ca3af;font-weight:600;">Customer</th>
+          <th style="padding:6px 0;text-align:right;color:#9ca3af;font-weight:600;">Amount</th>
+          <th style="padding:6px 0;text-align:right;color:#9ca3af;font-weight:600;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr style="border-bottom:1px solid #faf4e4;">
+          <td style="padding:8px 0;">
+            <a href="/admin/orders/order/{{ order.pk }}/change/"
+               style="color:#C4956A;font-weight:600;text-decoration:none;">
+              #{{ order.order_number }}
+            </a>
+          </td>
+          <td style="padding:8px 0;color:#374151;">
+            {{ order.shipping_full_name|default:order.user.email|default:"Guest"|truncatechars:20 }}
+          </td>
+          <td style="padding:8px 0;text-align:right;font-weight:600;">₹{{ order.total }}</td>
+          <td style="padding:8px 0;text-align:right;">
+            {% if order.order_status == "delivered" %}
+              <span style="color:#16a34a;font-size:11px;font-weight:600;">Delivered</span>
+            {% elif order.order_status == "shipped" %}
+              <span style="color:#0891b2;font-size:11px;font-weight:600;">Shipped</span>
+            {% elif order.order_status == "confirmed" %}
+              <span style="color:#2563eb;font-size:11px;font-weight:600;">Confirmed</span>
+            {% elif order.order_status == "cancelled" %}
+              <span style="color:#dc2626;font-size:11px;font-weight:600;">Cancelled</span>
+            {% else %}
+              <span style="color:#d97706;font-size:11px;font-weight:600;">{{ order.get_order_status_display }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#9ca3af;font-size:13px;text-align:center;padding:20px 0;">No orders yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Low Stock + Quick Links -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Low Stock Alert -->
+    <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;flex:1;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="margin:0;font-family:Georgia,serif;font-size:16px;color:#1a1a1a;">⚠ Low Stock</h3>
+        <a href="/admin/products/product/?stock_quantity__lte=10" style="font-size:12px;color:#C4956A;text-decoration:none;">View all →</a>
+      </div>
+      {% if low_stock_products %}
+        {% for product in low_stock_products %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #faf4e4;">
+          <a href="/admin/products/product/{{ product.pk }}/change/"
+             style="font-size:13px;color:#374151;text-decoration:none;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ product.name }}
+          </a>
+          <span style="font-size:12px;font-weight:700;color:{% if product.stock_quantity == 0 %}#dc2626{% else %}#d97706{% endif %};">
+            {{ product.stock_quantity }} left
+          </span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#16a34a;font-size:13px;text-align:center;padding:20px 0;">✓ All products well stocked</p>
+      {% endif %}
+    </div>
+
+    <!-- Quick Links -->
+    <div style="background:#1a1a1a;border-radius:16px;padding:20px;color:#fff;">
+      <h3 style="margin:0 0 14px 0;font-family:Georgia,serif;font-size:15px;color:#EDD8B4;">Quick Actions</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="/admin/products/product/add/" style="background:#C4956A;color:#fff;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">+ Add Product</a>
+        <a href="/admin/coupons/coupon/add/" style="background:#C4956A;color:#fff;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">+ Add Coupon</a>
+        <a href="/admin/orders/order/?order_status__exact=pending" style="background:#2d2d2d;color:#EDD8B4;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">Pending Orders</a>
+        <a href="/admin/reviews/review/?is_approved__exact=0" style="background:#2d2d2d;color:#EDD8B4;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">Pending Reviews</a>
+        <a href="/api/docs/" target="_blank" style="background:#2d2d2d;color:#EDD8B4;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">API Docs</a>
+        <a href="http://localhost:5173/" target="_blank" style="background:#2d2d2d;color:#EDD8B4;padding:8px 12px;border-radius:10px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;">View Store</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- App list from base -->
+<div style="margin-top:8px;">
+  {% for app in app_list %}
+  <div style="background:#fff;border-radius:16px;padding:20px;border:1px solid #F5EAD2;margin-bottom:16px;">
+    <h3 style="margin:0 0 12px 0;font-family:Georgia,serif;font-size:15px;color:#C4956A;text-transform:uppercase;letter-spacing:1px;">
+      {{ app.name }}
+    </h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
+      {% for model in app.models %}
+      <a href="{{ model.admin_url }}"
+         style="display:block;padding:10px 14px;background:#faf4e4;border-radius:10px;
+                text-decoration:none;color:#1a1a1a;font-size:13px;font-weight:500;
+                border:1px solid #F5EAD2;transition:background 0.2s;"
+         onmouseover="this.style.background='#EDD8B4'"
+         onmouseout="this.style.background='#faf4e4'">
+        {{ model.name }}
+        {% if model.add_url %}
+        <span style="float:right;color:#C4956A;font-size:16px;line-height:1;">+</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | AURA Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}"
+     style="font-family:'Playfair Display',Georgia,serif;
+            letter-spacing:0.3em;color:#EDD8B4;font-size:22px;">
+    AURA
+  </a>
+  <span style="font-size:11px;color:#9ca3af;margin-left:10px;
+               letter-spacing:1px;font-family:Inter,sans-serif;
+               font-weight:400;">
+    Store Admin
+  </span>
+</h1>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/custom.css' %}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
