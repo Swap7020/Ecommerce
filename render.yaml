@@ -1,59 +1,45 @@
 ##############################################################
 # AURA Cosmetics — Render Blueprint
-# Deploy everything from one file:
-#   render.com → New → Blueprint → connect GitHub repo
+# Dashboard → New → Blueprint → connect Swap7020/Ecommerce
 ##############################################################
 
 services:
 
-  # ── Django Backend (Web Service) ─────────────────────────
+  # ── Django Backend ───────────────────────────────────────
   - type: web
     name: aura-backend
     runtime: python
-    region: singapore          # closest to India
-    plan: free                 # upgrade to starter for production
+    region: singapore
+    plan: free
     rootDir: backend
-    buildCommand: bash build.sh
-    startCommand: >
-      gunicorn config.wsgi:application
-      --bind 0.0.0.0:$PORT
-      --workers 3
-      --timeout 120
-      --log-level info
-      --access-logfile -
+    buildCommand: pip install -r requirements.txt && DJANGO_SETTINGS_MODULE=config.settings.development python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120 --log-level info --access-logfile -
     healthCheckPath: /api/products/
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
-      - key: PYTHON_VERSION
-        value: 3.12.0
       - key: SECRET_KEY
-        generateValue: true          # Render auto-generates a strong key
+        generateValue: true
       - key: DEBUG
         value: "False"
-      - key: ALLOWED_HOSTS
-        value: aura-backend.onrender.com
+      - key: PYTHON_VERSION
+        value: "3.12.0"
       - key: DATABASE_URL
         fromDatabase:
           name: aura-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: aura-redis
-          type: redis
-          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: aura-backend.onrender.com
       - key: FRONTEND_URL
-        value: https://aura-cosmetics.vercel.app   # update after frontend deploy
+        value: https://aura-cosmetics.onrender.com
       - key: SECURE_SSL_REDIRECT
-        value: "False"               # Render handles SSL at the load balancer
-      # ── Cloudinary (add your values) ──
+        value: "False"
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      # ── Email / SendGrid (add your values) ──
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST
@@ -68,7 +54,6 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         value: noreply@auracosmetics.in
-      # ── Payments (add your values) ──
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
@@ -79,48 +64,33 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      # ── JWT ──
-      - key: JWT_ACCESS_TOKEN_LIFETIME_MINUTES
-        value: "60"
-      - key: JWT_REFRESH_TOKEN_LIFETIME_DAYS
-        value: "7"
 
-  # ── Celery Worker ────────────────────────────────────────
-  - type: worker
-    name: aura-celery
-    runtime: python
+  # ── React Frontend ───────────────────────────────────────
+  - type: web
+    name: aura-frontend
+    runtime: node
     region: singapore
     plan: free
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: celery -A config worker -l info --concurrency 2
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: aura-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: aura-redis
-          type: redis
-          property: connectionString
-      - key: SECRET_KEY
-        fromService:
-          name: aura-backend
-          type: web
-          envVarKey: SECRET_KEY
+      - key: VITE_API_URL
+        value: https://aura-backend.onrender.com/api
+      - key: NODE_VERSION
+        value: "20"
 
 databases:
-
-  # ── PostgreSQL ───────────────────────────────────────────
   - name: aura-db
     databaseName: aura_cosmetics
     user: aura_user
     region: singapore
-    plan: free                 # 1GB storage on free tier
-
-  # ── Redis ────────────────────────────────────────────────
-  # Note: Add Redis manually in Render dashboard (free tier available)
-  # Then link it as REDIS_URL env var on aura-backend and aura-celery
+    plan: free

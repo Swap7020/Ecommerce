@@ -1,54 +1,39 @@
+# ── AURA Cosmetics — Backend Dockerfile ──────────────────────────────────────
+# Used by Render (Web Service) and Docker Compose.
+# Render injects $PORT at runtime (default 10000).
+# ─────────────────────────────────────────────────────────────────────────────
 FROM python:3.12-slim
 
-# ── Build-time env ────────────────────────────────────────────────────────────
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.production
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-# ── System packages needed for psycopg2, Pillow, etc. ────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libpq-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    libwebp-dev \
-    libffi-dev \
-    curl \
-    && apt-get clean \
+# System dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        libpq-dev \
+        libjpeg-dev \
+        zlib1g-dev \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Install Python packages ───────────────────────────────────────────────────
+# Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# ── Copy application code ─────────────────────────────────────────────────────
+# Application code
 COPY . .
 
-# ── Collect static files ─────────────────────────────────────────────────────
-# Use a minimal inline settings override so collectstatic
-# never needs a real DB or Cloudinary connection
-RUN SECRET_KEY=railway-build-only \
-    DATABASE_URL=sqlite:////tmp/b.db \
-    CLOUDINARY_CLOUD_NAME="" \
-    DJANGO_SETTINGS_MODULE=config.settings.development \
-    python manage.py collectstatic --noinput 2>&1 || true
+# Render uses $PORT (typically 10000); default to 8000 for Docker Compose
+EXPOSE 10000
 
-# ── Expose port ───────────────────────────────────────────────────────────────
-EXPOSE 8000
-
-# ── Runtime startup ───────────────────────────────────────────────────────────
-# Railway sets $PORT automatically; we migrate on every deploy start
-CMD sh -c "python manage.py migrate --noinput && \
-           gunicorn config.wsgi:application \
-               --bind 0.0.0.0:${PORT:-8000} \
-               --workers 2 \
-               --threads 2 \
-               --timeout 120 \
-               --log-level info \
-               --access-logfile -"
+# Collect static, migrate, then start gunicorn
+# collectstatic uses development settings (SQLite, no external services)
+CMD ["sh", "-c", \
+     "DJANGO_SETTINGS_MODULE=config.settings.development python manage.py collectstatic --noinput && \
+      python manage.py migrate --noinput && \
+      gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-10000} --workers 3 --timeout 120 --log-level info --access-logfile -"]
