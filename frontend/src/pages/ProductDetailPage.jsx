@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   Heart, ShoppingBag, Truck, Shield, RefreshCw, ChevronDown,
@@ -41,7 +42,9 @@ export default function ProductDetailPage() {
     ]).then(([p, r]) => {
       setProduct(p)
       setReviews(r)
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch((err) => {
+      console.error('Product fetch error:', err?.response?.status, err?.message)
+    }).finally(() => setLoading(false))
   }, [slug])
 
   if (loading) return <ProductDetailSkeleton />
