@@ -1,6 +1,8 @@
 """
 AURA Cosmetics — Production Settings
-Tested on Render, Railway, Heroku, Docker.
+Works on Render (native Python runtime).
+DATABASE_URL is provided by Render's PostgreSQL plugin at runtime.
+During build time (no DATABASE_URL), falls back to SQLite so collectstatic works.
 """
 from .base import *   # noqa: F401, F403
 from decouple import config
@@ -12,6 +14,7 @@ DEBUG = False
 _DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 if _DATABASE_URL:
+    # Runtime: Render / Railway / Heroku provides a full DATABASE_URL
     try:
         import dj_database_url
         DATABASES = {
@@ -26,27 +29,22 @@ if _DATABASE_URL:
         _db = urlparse(_DATABASE_URL)
         DATABASES = {
             'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME':     _db.path.lstrip('/'),
-                'USER':     _db.username,
-                'PASSWORD': _db.password or '',
-                'HOST':     _db.hostname,
-                'PORT':     str(_db.port or 5432),
+                'ENGINE':       'django.db.backends.postgresql',
+                'NAME':         _db.path.lstrip('/'),
+                'USER':         _db.username,
+                'PASSWORD':     _db.password or '',
+                'HOST':         _db.hostname,
+                'PORT':         str(_db.port or 5432),
                 'CONN_MAX_AGE': 60,
-                'OPTIONS':  {'connect_timeout': 10},
+                'OPTIONS':      {'connect_timeout': 10},
             }
         }
 else:
+    # Build time (no DATABASE_URL yet) — use SQLite so collectstatic works
     DATABASES = {
         'default': {
-            'ENGINE':   'django.db.backends.postgresql',
-            'NAME':     config('DB_NAME'),
-            'USER':     config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST':     config('DB_HOST'),
-            'PORT':     config('DB_PORT', default='5432'),
-            'CONN_MAX_AGE': 60,
-            'OPTIONS':  {'connect_timeout': 10},
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME':   '/tmp/aura_build.db',
         }
     }
 
@@ -67,7 +65,7 @@ if _REDIS_URL:
     CELERY_RESULT_BACKEND = _REDIS_URL
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
-_FRONTEND = config('FRONTEND_URL', default='https://aura-cosmetics.onrender.com')
+_FRONTEND = config('FRONTEND_URL', default='https://aura-frontend.onrender.com')
 CORS_ALLOWED_ORIGINS = [_FRONTEND]
 _EXTRA = os.environ.get('CORS_EXTRA_ORIGINS', '')
 if _EXTRA:
@@ -79,7 +77,7 @@ ALLOWED_HOSTS = [h.strip() for h in _hosts_str.split(',') if h.strip()]
 ALLOWED_HOSTS += ['.onrender.com']
 
 # ─── Security ─────────────────────────────────────────────────────────────────
-# Render terminates SSL at the load balancer — do NOT redirect internally
+# Render terminates SSL at the edge — do NOT redirect internally
 SECURE_SSL_REDIRECT            = False
 SECURE_PROXY_SSL_HEADER        = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS            = 31536000

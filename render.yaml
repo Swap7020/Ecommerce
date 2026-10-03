@@ -1,6 +1,6 @@
 ##############################################################
 # AURA Cosmetics — Render Blueprint
-# Dashboard → New → Blueprint → connect Swap7020/Ecommerce
+# render.com → New → Blueprint → connect Swap7020/Ecommerce
 ##############################################################
 
 services:
@@ -12,8 +12,19 @@ services:
     region: singapore
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && DJANGO_SETTINGS_MODULE=config.settings.development python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120 --log-level info --access-logfile -
+    # Build: install deps + collect static (uses dev settings = no real DB needed)
+    buildCommand: >
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput
+    # Start: migrate then serve (production settings active at runtime)
+    startCommand: >
+      python manage.py migrate --noinput &&
+      gunicorn config.wsgi:application
+      --bind 0.0.0.0:$PORT
+      --workers 3
+      --timeout 120
+      --log-level info
+      --access-logfile -
     healthCheckPath: /api/products/
     envVars:
       - key: DJANGO_SETTINGS_MODULE
@@ -31,15 +42,17 @@ services:
       - key: ALLOWED_HOSTS
         value: aura-backend.onrender.com
       - key: FRONTEND_URL
-        value: https://aura-cosmetics.onrender.com
+        value: https://aura-frontend.onrender.com
       - key: SECURE_SSL_REDIRECT
         value: "False"
+      # Cloudinary — add your values in Render dashboard
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      # Email — SendGrid
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST
@@ -54,6 +67,7 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         value: noreply@auracosmetics.in
+      # Payments — add your values in Render dashboard
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
@@ -65,10 +79,10 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
-  # ── React Frontend ───────────────────────────────────────
+  # ── React Frontend (Static Site) ─────────────────────────
   - type: web
     name: aura-frontend
-    runtime: node
+    runtime: static
     region: singapore
     plan: free
     rootDir: frontend
